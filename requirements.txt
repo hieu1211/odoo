@@ -51,3 +51,4 @@ phonenumbers
 gengo
 pdfminer.six
 websocket-client
+geoip2
