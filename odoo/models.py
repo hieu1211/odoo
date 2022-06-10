@@ -4584,7 +4584,8 @@ Fields:
 
         fields_to_copy = {name: field
                           for name, field in self._fields.items()
-                          if field.copy and name not in default and name not in blacklist}
+                          if field.copy and (not field.groups or self.user_has_groups(field.groups))
+                                        and name not in default and name not in blacklist}
 
         for name, field in fields_to_copy.items():
             if field.type == 'one2many':
