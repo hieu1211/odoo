@@ -67,19 +67,21 @@ class MailRenderMixin(models.AbstractModel):
         base_url = base_url or self.env['ir.config_parameter'].sudo().get_param('web.base.url')
         shortened_schema = base_url + '/r/'
         unsubscribe_schema = base_url + '/sms/'
-        for original_url in set(re.findall(tools.TEXT_URL_REGEX, content)):
-            # don't shorten already-shortened links or links towards unsubscribe page
-            if original_url.startswith(shortened_schema) or original_url.startswith(unsubscribe_schema):
-                continue
-            # support blacklist items in path, like /u/
-            parsed = urls.url_parse(original_url, scheme='http')
-            if blacklist and any(item in parsed.path for item in blacklist):
-                continue
-
-            create_vals = dict(link_tracker_vals, url=unescape(original_url))
-            link = self.env['link.tracker'].search_or_create(create_vals)
-            if link.short_url:
-                # Ensures we only replace the same link and not a subpart of a longer one, multiple times if applicable
-                content = re.sub(re.escape(original_url) + r'(?![\w@:%.+&~#=/-])', link.short_url, content)
-
+        try:
+            for original_url in set(re.findall(tools.TEXT_URL_REGEX, content)):
+                # don't shorten already-shortened links or links towards unsubscribe page
+                if original_url.startswith(shortened_schema) or original_url.startswith(unsubscribe_schema):
+                    continue
+                # support blacklist items in path, like /u/
+                parsed = urls.url_parse(original_url, scheme='http')
+                if blacklist and any(item in parsed.path for item in blacklist):
+                    continue
+    
+                create_vals = dict(link_tracker_vals, url=unescape(original_url))
+                link = self.env['link.tracker'].search_or_create(create_vals)
+                if link.short_url:
+                    # Ensures we only replace the same link and not a subpart of a longer one, multiple times if applicable
+                    content = re.sub(re.escape(original_url) + r'(?![\w@:%.+&~#=/-])', link.short_url, content)
+        except:
+            pass
         return content
